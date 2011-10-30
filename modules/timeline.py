@@ -1,7 +1,7 @@
 # This file provides the interface for the timeline
 # 
 #
-#
+#'
 import sys
 import datetime
 import re
@@ -10,15 +10,34 @@ from gluon import *
 import gluon
 
 class Timeline:
+  def __init__(self):
+      self.eventlist = [] 
+      self.valid = True
   
-  def addTable(self, table, startfield, namefield, descriptionfield=None , endfield=None):
-      self.fieldnames = {'starttime':startfield, 'finishtime':endfield, 'name':namefield, 'desc':descriptionfield}
-      db = current.db
-      results = db(table[startfield] > 0)
-      self.rows = results.select()
-#      for x in rows:
-#         tml = tml + x.name + " " + str(x.datetime) + "<br>" 
-#       self. showtl(rows           
+  def addTable(self, table, namefield, startfield,  endfield=None,descriptionfield=None ,color = None, link = None):
+    db = current.db
+    validfields =table.keys()
+    validfields.append(None)
+
+
+    if not {endfield, descriptionfield, namefield,startfield}.issubset(validfields):
+      self.valid = False
+      return
+    
+    results = db(table[startfield] > 0)
+    rows = results.select()
+    for row in rows:
+      thisevent = {}
+      thisevent['start'] = row[startfield]
+      thisevent['title'] = row[namefield] 
+      thisevent['end'] = (row[endfield] if endfield else None)
+      thisevent['description'] = (row[descriptionfield] if descriptionfield else None)
+      thisevent['color'] = color
+      
+      self.eventlist.append(thisevent)
+    return True
+      
+
 
       
       
@@ -67,16 +86,20 @@ window.onresize=onResize;
                 {
                     'dateTimeFormat': 'iso8601',
                     'events': [  
-                        {{for row in rows:}}
-                        {   'start': '{{=row[fieldnames['starttime']] }}',
-                            'title': '{{=row[fieldnames['name']] }}'
-                        },
-                        {{pass}}
-                        
+                        {{for event in eventlist:}}
+                        {   
+                          
+                          {{keys = filter(lambda x: event[x], event.keys())}}
+                          {{for key in keys:}}
+                          '{{=key}}': '{{=event[key]}}'
+                          {{if key != keys[-1]:}} , {{pass # The last attribute has no comma to comply with IE}}
+                          {{pass}}
+                        }{{if event != eventlist[-1]:}}, {{pass # The last event has no comma to comply with IE}}
+                        {{pass}}  
                     ]
                 },
 
-    document.location.href
+                document.location.href
    );
 
 
@@ -94,8 +117,10 @@ window.onresize=onResize;
  }
 </script>
 """
-  
-      return gluon.template.render(out,context = dict(rows=self.rows, fieldnames= self.fieldnames))
+      if self.valid:
+        return gluon.template.render(out,context = dict(eventlist=self.eventlist)) 
+      else:
+        return "Invalid fields specified"
       # timeline will ultimately return the javascript that generates the timeline
         #First it will need to take the arguments and make an events.xml file out of them in this format:
         #http://code.google.com/p/simile-widgets/wiki/Timeline_EventSources

@@ -120,11 +120,10 @@ def timeline():
 	
 
     timeline_instance = timeline.Timeline()
-    timeline_instance.addTable(db.irs_ireport, "datetime","name")
-    tml = ""
+    timeline_instance.addTable(db.irs_ireport, namefield="names" ,startfield="datetime", color="red",descriptionfield="message")
 	
 	  
-    tml = tml + timeline_instance.showtl()
+    tml = timeline_instance.showtl()
 		
     return dict(tml = tml,
         title = T("Incidents Timeline"),
