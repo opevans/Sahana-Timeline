@@ -118,23 +118,16 @@ def timeline():
 # This will be involved in generating the timeline information
     import timeline
 	
-    table = db.irs_ireport
-    timestamp = table.datetime
-    results = db(timestamp > 0)
-    rows = results.select()
-	
+
     timeline_instance = timeline.Timeline()
-	
+    timeline_instance.addTable(db.irs_ireport, "datetime","name")
     tml = ""
 	
-	
-    for x in rows:
-        tml = tml + x.name + " " + str(x.datetime) + "<br>" 
-
+	  
     tml = tml + timeline_instance.showtl()
 		
     return dict(tml = tml,
         title = T("Incidents Timeline"),
         subtitle = T("Incidents Timeline") )
 
-# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------http://localhost:8000/admin/default/ticket/eden/127.0.0.1.2011-10-29.18-24-02.be340792-2f34-40dc-8310-46b150984ed2

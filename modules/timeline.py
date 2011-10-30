@@ -6,12 +6,24 @@ import sys
 import datetime
 import re
 import os
+from gluon import *
 import gluon
-class Timeline:
 
+class Timeline:
+  
+  def addTable(self, table, startfield, namefield, descriptionfield=None , endfield=None):
+      self.fieldnames = {'starttime':startfield, 'finishtime':endfield, 'name':namefield, 'desc':descriptionfield}
+      db = current.db
+      results = db(table[startfield] > 0)
+      self.rows = results.select()
+#      for x in rows:
+#         tml = tml + x.name + " " + str(x.datetime) + "<br>" 
+#       self. showtl(rows           
+
+      
+      
   def showtl(self): #later may have arguments
-      return("""
-	  
+      out = """
 <script type="text/javascript" src="/eden/static/scripts/timeline/timeline_ajax/simile-ajax-api.js?bundle=false"></script>
 <script type="text/javascript" src="/eden/static/scripts/timeline/timeline_ajax/simile-ajax-bundle.js"></script>
 <link rel="stylesheet" type="text/css" href="/eden/static/scripts/timeline/timeline_ajax/styles/graphics.css">
@@ -54,19 +66,13 @@ window.onresize=onResize;
    eventSource.loadJSON(
                 {
                     'dateTimeFormat': 'iso8601',
-                    'events': [
-                        {   'start': '2009-03-18',
-                            'title': 'A: 2009-03-18'
+                    'events': [  
+                        {{for row in rows:}}
+                        {   'start': '{{=row[fieldnames['starttime']] }}',
+                            'title': '{{=row[fieldnames['name']] }}'
                         },
-                        {   'start': '2009-03-18T00:00:00',
-                            'title': 'B: 2009-03-18T00:00:00'
-                        },
-                        {   'start': '2009-03-19T00:00:00Z',
-                            'title': 'C: 2009-03-18T00:00:00Z'
-                        },
-                        {   'start': '2009-03-18T00:00:00-08:00',
-                            'title': 'D: 2009-03-18T00:00:00-08:00'
-                        }
+                        {{pass}}
+                        
                     ]
                 },
 
@@ -87,8 +93,9 @@ window.onresize=onResize;
      }
  }
 </script>
-""" )
-        
+"""
+  
+      return gluon.template.render(out,context = dict(rows=self.rows, fieldnames= self.fieldnames))
       # timeline will ultimately return the javascript that generates the timeline
         #First it will need to take the arguments and make an events.xml file out of them in this format:
         #http://code.google.com/p/simile-widgets/wiki/Timeline_EventSources
